@@ -5,7 +5,6 @@
 #include <chrono>
 #include <filesystem>
 #include <iostream>
-#include <utility>
 
 namespace lce::tests::util {
 #define _OPEN_FILE(path, out, name)                                            \
@@ -48,10 +47,10 @@ namespace lce::tests::util {
     const std::filesystem::path output =
         std::filesystem::weakly_canonical("../../tests/output");
 
-    namespace Types {
+    namespace types {
         static constexpr const char *const FORMATS = "Formats";
         static constexpr const char *const VFS = "VFS";
-    } // namespace Types
+    } // namespace types
 
     template <class... Args>
     void runTest(void (*test)(Args...), const char *const type,

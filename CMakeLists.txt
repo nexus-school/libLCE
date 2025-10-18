@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.26)
 project(LCE VERSION 1.2.4)
 
-set(VERSION_SUFFIX "-dev.1") # used for non-stable versions
+set(VERSION_SUFFIX "-dev.2") # used for non-stable versions
 set(CMAKE_CXX_STANDARD 17)
 
-add_definitions(-DCOMPILER_NAME="${CMAKE_CXX_COMPILER_ID}")
-add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
-add_definitions(-DPLATFORM_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
-
 message(STATUS "${CMAKE_SYSTEM_PROCESSOR}")
+
+include(FetchContent)
+FetchContent_Declare(
+        BIO
+        GIT_REPOSITORY https://github.com/DexrnZacAttack/libBIO.git
+        GIT_TAG main
+)
+FetchContent_MakeAvailable(BIO)
 
 include_directories(include external)
 
@@ -39,76 +43,63 @@ set(ZLIB_FILES
 
 set(HEADERS
         # Windows
-        include/Resources/resource.h
-        include/Resources/resource.rc
+        include/LCE/resources/resource.h
+        include/LCE/resources/resource.rc
 
         # libLCE
-        include/libLCE.h
-        include/libLCEExports.h
+        include/LCE/libLCE.h
+        include/LCE/libLCEExports.h
         # Save
-        include/Save/SaveFile.h
-        include/Save/SaveFileOld.h
-        include/Save/SaveFileCommons.h
-        include/Save/Thumb.h
+        include/LCE/save/SaveFile.h
+        include/LCE/save/SaveFileOld.h
+        include/LCE/save/SaveFileCommons.h
+        include/LCE/save/Thumb.h
         # IO
-        include/IO/Serializable.h
-        include/IO/BinaryIO.h
+        include/LCE/io/Serializable.h
         # ARC
-        include/Archive/Archive.h
+        include/LCE/archive/Archive.h
         # COL
-        include/Color/Color.h
-        include/Color/ColorFile.h
+        include/LCE/color/Color.h
+        include/LCE/color/ColorFile.h
         # LOC
-        include/Localization/LocalizationFile.h
-        include/Localization/Language.h
+        include/LCE/localization/LocalizationFile.h
+        include/LCE/localization/Language.h
         # MSSCMP
-        include/Soundbank/Soundbank.h
-        include/Soundbank/BinkaFile.h
-        # World
-        include/World/SplitSave.h
-        include/World/Block.h
-        include/World/Region.h
-        include/World/Chunk.h
+        include/LCE/soundbank/Soundbank.h
+        include/LCE/soundbank/BinkaFile.h
         # Other
-        include/Compression/Compression.h
+        include/LCE/compression/Compression.h
         # Filesystem
-        include/Filesystem/FSObject.h
-        include/Filesystem/Directory.h
-        include/Filesystem/Filesystem.h
-        include/Filesystem/File.h
+        include/LCE/filesystem/FSObject.h
+        include/LCE/filesystem/Directory.h
+        include/LCE/filesystem/Filesystem.h
+        include/LCE/filesystem/File.h
         # Bindings
-        include/Bindings/EmscriptenBindings.h
+        include/LCE/bindings/EmscriptenBindings.h
         # Unsorted
 )
 
 set(FILES
         src/libLCEExports.cpp
-        src/Bindings/EmscriptenBindings.cpp
-        src/World/Region.cpp
-        src/World/Chunk.cpp
-        src/Save/SaveFile.cpp
-        src/IO/BinaryIO.cpp
-        src/Filesystem/Filesystem.cpp
-        src/Archive/Archive.cpp
-        src/Color/Colors/Color.cpp
-        src/Color/Colors/WorldColor.cpp
-        src/Color/ColorFile.cpp
-        src/Color/ColorFileOld.cpp
-        src/Localization/LocalizationFile.cpp
-        src/Localization/Language.cpp
-        src/Soundbank/Soundbank.cpp
-        src/Save/SaveFileOld.cpp
-        src/Save/SaveFileCommons.cpp
-        src/IO/BinaryString.cpp
-        src/Compression/Compression.cpp
-        src/Save/Thumb.cpp
-        src/World/SplitSave.cpp
-        src/World/Block.cpp
-        src/World/Chunk/V12.cpp
-        src/Filesystem/FSObject.cpp
-        src/Filesystem/File.cpp
-        src/Filesystem/Directory.cpp
-        src/IO/Serializable.cpp
+        src/bindings/EmscriptenBindings.cpp
+        src/save/SaveFile.cpp
+        src/filesystem/Filesystem.cpp
+        src/archive/Archive.cpp
+        src/color/Colors/Color.cpp
+        src/color/Colors/WorldColor.cpp
+        src/color/ColorFile.cpp
+        src/color/ColorFileOld.cpp
+        src/localization/LocalizationFile.cpp
+        src/localization/Language.cpp
+        src/soundbank/Soundbank.cpp
+        src/save/SaveFileOld.cpp
+        src/save/SaveFileCommons.cpp
+        src/compression/Compression.cpp
+        src/save/Thumb.cpp
+        src/filesystem/FSObject.cpp
+        src/filesystem/File.cpp
+        src/filesystem/Directory.cpp
+        src/io/Serializable.cpp
 )
 
 option(ENABLE_OPTIMIZATIONS "Enable compiler optimizations" OFF)
@@ -137,27 +128,30 @@ else ()
     set(LIB_TYPE SHARED)
     add_library(LCE ${LIB_TYPE} ${HEADERS} ${FILES} ${LODEPNG_FILES} ${ZLIB_FILES})
 
-    target_include_directories(LCE PUBLIC "include" "src")
+    target_include_directories(LCE
+            PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include/LCE
+    )
     target_compile_definitions(LCE PRIVATE LIBLCE_EXPORTS)
 
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests EXCLUDE_FROM_ALL)
 endif ()
-
 # me: "why don't we use c++20 for std::endian?"
 # them: "c++20 is in my nightmares"
 
-#set endianness define
-if (CMAKE_CXX_BYTE_ORDER EQUAL BIG_ENDIAN)
-    target_compile_definitions(LCE PRIVATE BR_BIG_ENDIAN)
-endif ()
+target_link_libraries(LCE PRIVATE BIO)
 
-target_compile_definitions(LCE PRIVATE
+target_compile_definitions(LCE PUBLIC
+        LIBLCE_COMPILER_NAME="${CMAKE_CXX_COMPILER_ID}"
+        LIBLCE_PLATFORM_NAME="${CMAKE_SYSTEM_NAME}"
+        LIBLCE_PLATFORM_ARCH="${CMAKE_SYSTEM_PROCESSOR}"
         LIBLCE_VERSION="${PROJECT_VERSION}${VERSION_SUFFIX}"
         LIBLCE_RC_VERSION=${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH}
 )
 
 # https://github.com/jothepro/doxygen-awesome-css?tab=readme-ov-file#cmake-with-fetchcontent
-include(FetchContent)
 FetchContent_Declare(
         doxygen-awesome-css
         URL https://github.com/jothepro/doxygen-awesome-css/archive/refs/heads/main.zip
@@ -173,7 +167,7 @@ IF (DOXYGEN_FOUND)
 
     CONFIGURE_FILE(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
-    ADD_CUSTOM_TARGET(docs
+    ADD_CUSTOM_TARGET(lceDocs
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             VERBATIM

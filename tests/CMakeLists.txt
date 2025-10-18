@@ -16,7 +16,7 @@ set(FILES
 
 add_executable(libLCE.Tests ${FILES})
 
-target_link_libraries(libLCE.Tests PRIVATE LCE)
+target_link_libraries(libLCE.Tests PRIVATE LCE BIO)
 
 target_include_directories(libLCE.Tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

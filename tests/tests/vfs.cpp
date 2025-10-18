@@ -3,8 +3,8 @@
 //
 #include "vfs.h"
 
-#include "Filesystem/Directory.h"
-#include "Filesystem/Filesystem.h"
+#include "LCE/filesystem/Directory.h"
+#include "LCE/filesystem/Filesystem.h"
 
 namespace lce::tests::vfs {
     void runForEachRecursive() {

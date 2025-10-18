@@ -1,13 +1,13 @@
 #include <filesystem>
 
-#include <libLCEExports.h>
+#include "LCE/libLCEExports.h"
 
 #include "tests/formats.h"
 #include "tests/vfs.h"
 #include <util.h>
 
 int main(int argc, char **argv) {
-    lce::printLibraryInfo();
+    std::cout << lce::lce_get_library_string() << std::endl;
 
     std::filesystem::create_directories(lce::tests::util::examples); // input
     std::filesystem::create_directories(lce::tests::util::output);   // output
